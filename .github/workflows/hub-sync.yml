@@ -1,41 +1,38 @@
-name: Hub Sync Orchestrator
+name: Base Sync Orchestrator
 on:
   workflow_dispatch:
     inputs:
       target_branch:
-        description: "Which branch to update in target repos?"
+        description: "Which branch in Child repos to update?"
         required: true
         default: "dev"
         type: choice
         options: [dev, live]
-      sync_repo_1:
-        description: "Update Repo 1?"
+      sync_child1:
+        description: "Update Child 1?"
         type: boolean
         default: true
-      sync_repo_2:
-        description: "Update Repo 2?"
+      sync_child2:
+        description: "Update Child 2?"
         type: boolean
         default: true
 
 jobs:
-  trigger-sync:
+  dispatch:
     runs-on: ubuntu-latest
     steps:
-      # We use a loop/matrix or individual steps to call each repo
-      - name: Signal Repo 1
-        if: ${{ inputs.sync_repo_1 }}
+      - name: Signal Child 1
+        if: ${{ inputs.sync_child1 }}
         run: |
           curl -X POST -H "Authorization: token ${{ secrets.MY_GITHUB_TOKEN }}" \
           -H "Accept: application/vnd.github.v3+json" \
           https://api.github.com/repos/cybro-farseen/child1/dispatches \
-          -d '{"event_type": "sync_from_hub", "client_payload": {"branch": "${{ inputs.target_branch }}"}}'
+          -d '{"event_type": "sync_from_base", "client_payload": {"branch": "${{ inputs.target_branch }}"}}'
 
-      - name: Signal Repo 2
-        if: ${{ inputs.sync_repo_2 }}
+      - name: Signal Child 2
+        if: ${{ inputs.sync_child2 }}
         run: |
           curl -X POST -H "Authorization: token ${{ secrets.MY_GITHUB_TOKEN }}" \
           -H "Accept: application/vnd.github.v3+json" \
           https://api.github.com/repos/cybro-farseen/child2/dispatches \
-          -d '{"event_type": "sync_from_hub", "client_payload": {"branch": "${{ inputs.target_branch }}"}}'
-
-      # Repeat the 'Signal' step for Repo 3 and 4...
+          -d '{"event_type": "sync_from_base", "client_payload": {"branch": "${{ inputs.target_branch }}"}}'
